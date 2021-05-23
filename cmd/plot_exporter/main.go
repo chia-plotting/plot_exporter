@@ -2,17 +2,18 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/obicons/plot_exporter/logwatch"
+	"github.com/obicons/plot_exporter/metricserver"
 )
 
 func main() {
 	directoryName := flag.String("directory", "", "directory where plot logs are stored")
+	serverAddr := flag.String("addr", "0.0.0.0:10001", "address for metrics server")
 	flag.Parse()
 
 	signalChan := make(chan os.Signal)
@@ -20,6 +21,9 @@ func main() {
 
 	logWatcher := logwatch.NewLogWatcher(*directoryName)
 	logWatcher.Start()
+
+	ms := metricserver.NewMetricServer(*serverAddr)
+	ms.Start()
 
 	ticker := time.NewTicker(time.Second * 30)
 	shouldShutdown := false
@@ -29,10 +33,7 @@ func main() {
 			shouldShutdown = true
 
 		case <-ticker.C:
-			progress := logWatcher.GetProgress()
-			for log, prog := range progress {
-				fmt.Printf("%s: %d\n", log, prog)
-			}
+			ms.SetProgress(logWatcher.GetProgress())
 		}
 	}
 	logWatcher.Shutdown()
