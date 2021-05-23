@@ -8,7 +8,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=plotter
-ExecStart=/usr/local/bin/plot_exporter
+ExecStart=/usr/local/bin/plot_exporter -directory /home/plotter/logs/plotman/
 
 [Install]
 WantedBy=multi-user.target
