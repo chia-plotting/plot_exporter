@@ -13,7 +13,7 @@ var (
 	computingTableRegex   = regexp.MustCompile("^Computing table ([0-9]+)$")
 	backpropTableRegex    = regexp.MustCompile("^Backpropagating on table ([0-9]+)$")
 	compressTableRegex    = regexp.MustCompile("^Compressing tables ([0-9]+) and ([0-9])+$")
-	writeCheckpointTables = regexp.MustCompile(".*Write checkpoint tables.*$")
+	writeCheckpointTables = regexp.MustCompile(".*Write Checkpoint tables.*$")
 
 	computingTableProgress = map[uint]uint{
 		1: 1,

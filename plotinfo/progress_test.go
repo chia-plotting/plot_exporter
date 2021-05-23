@@ -144,7 +144,7 @@ func TestGetLineProgressInvalidCompressingTables7(t *testing.T) {
 }
 
 func TestGetLineProgressWriteCheckpointTables(t *testing.T) {
-	s := "Write checkpoint tables"
+	s := `Starting phase 4/4: Write Checkpoint tables into "/mount/ssd0/plot-k32-2021-05-23-09-43-abf3373e4cf81ac349ef2302255d713a8357fc34191fabc38af013fe0941e858.plot.2.tmp" ... Sun May 23 14:26:38 2021`
 	p, d, e := getLineProgress(s)
 	if e != nil {
 		t.Errorf("getLineProgress(\"%s\") returned an unexpected error", s)
