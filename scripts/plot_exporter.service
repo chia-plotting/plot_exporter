@@ -1,0 +1,14 @@
+[Unit]
+Description=Plot status exporter
+After=network.target
+StartLimitIntervalSec=1
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=plotter
+ExecStart=/usr/local/bin/plot_exporter
+
+[Install]
+WantedBy=multi-user.target
