@@ -3,6 +3,7 @@ package logwatch
 import (
 	"log"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -100,7 +101,8 @@ func (w *LogWatcher) updateProgress() {
 			continue
 		}
 
-		reader, err := os.Open(file.Name())
+		filename := path.Join(w.directoryName, file.Name())
+		reader, err := os.Open(filename)
 		if err != nil {
 			log.Printf("error: updateProgress(): Open(): %s\n", file.Name())
 			continue
