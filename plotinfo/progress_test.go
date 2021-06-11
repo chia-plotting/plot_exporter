@@ -15,6 +15,26 @@ func TestGetPlotProgressEmpty(t *testing.T) {
 	}
 }
 
+func TestGetPlotProgressAlt1(t *testing.T) {
+	sr := strings.NewReader("[P1] Table 1 took 42.3756 sec")
+	p, c := GetPlotProgress(sr)
+	if p != 1 {
+		t.Errorf("progress = %d, expected progress = 1", p)
+	} else if c {
+		t.Errorf("completed = %v, expected completed = false", c)
+	}
+}
+
+func TestGetPlotProgressAlt7(t *testing.T) {
+	sr := strings.NewReader("[P1] Table 7 took 210.433 sec, found 4291272508 matches")
+	p, c := GetPlotProgress(sr)
+	if p != 42 {
+		t.Errorf("progress = %d, expected progress = 42", p)
+	} else if c {
+		t.Errorf("completed = %v, expected completed = false", c)
+	}
+}
+
 func TestGetPlotProgressRoutine(t *testing.T) {
 	sr := strings.NewReader(`Computing table 7
 Some Noisy Line
@@ -71,6 +91,30 @@ func TestGetLineProgressComputingTableInvalid(t *testing.T) {
 	}
 }
 
+func TestGetLineProgressRoutineBackpropagatingAltTable7(t *testing.T) {
+	s := "[P2] Table 7 rewrite took 66.4952 sec, dropped 0 entries (0 %)"
+	p, d, e := getLineProgress(s)
+	if e != nil {
+		t.Errorf("getLineProgress(\"%s\") returned an unexpected error", s)
+	} else if d {
+		t.Errorf("getLineProgress(\"%s\") returned done expectedly", s)
+	} else if p != 43 {
+		t.Errorf("getLineProgress(\"%s\") returned progress %d, expected %d", s, p, 43)
+	}
+}
+
+func TestGetLineProgressRoutineBackpropagatingAltTable2(t *testing.T) {
+	s := "[P2] Table 2 rewrite took 154.391 sec, dropped 865627722 entries (20.1553 %)"
+	p, d, e := getLineProgress(s)
+	if e != nil {
+		t.Errorf("getLineProgress(\"%s\") returned an unexpected error", s)
+	} else if d {
+		t.Errorf("getLineProgress(\"%s\") returned done expectedly", s)
+	} else if p != 61 {
+		t.Errorf("getLineProgress(\"%s\") returned progress %d, expected %d", s, p, 61)
+	}
+}
+
 func TestGetLineProgressRoutineBackpropagatingTable7(t *testing.T) {
 	s := "Backpropagating on table 7"
 	p, d, e := getLineProgress(s)
@@ -108,6 +152,18 @@ func TestGetLineProgressInvalidBackpropagatingTable1(t *testing.T) {
 	_, _, e := getLineProgress(s)
 	if e == nil {
 		t.Errorf("getLineProgress(\"%s\") did not return an error", s)
+	}
+}
+
+func TestGetLineProgressRoutineCompressingTablesAlt2(t *testing.T) {
+	s := "[P3-2] Table 2 took 72.5527 sec, wrote 3429170594 left entries, 3429170594 final"
+	p, d, e := getLineProgress(s)
+	if e != nil {
+		t.Errorf("getLineProgress(\"%s\") returned an unexpected error", s)
+	} else if d {
+		t.Errorf("getLineProgress(\"%s\") returned done expectedly", s)
+	} else if p != 73 {
+		t.Errorf("getLineProgress(\"%s\") returned progress %d, expected %d", s, p, 73)
 	}
 }
 

@@ -10,10 +10,14 @@ import (
 )
 
 var (
-	computingTableRegex   = regexp.MustCompile("^Computing table ([0-9]+)$")
-	backpropTableRegex    = regexp.MustCompile("^Backpropagating on table ([0-9]+)$")
-	compressTableRegex    = regexp.MustCompile("^Compressing tables ([0-9]+) and ([0-9])+$")
-	writeCheckpointTables = regexp.MustCompile(".*Write Checkpoint tables.*$")
+	computingTableRegex      = regexp.MustCompile("^Computing table ([0-9]+)$")
+	computingTableAltRegex   = regexp.MustCompile("^\\[P1\\] Table ([0-9]+) took .* sec(, found [0-9]+ matches)?$")
+	backpropTableRegex       = regexp.MustCompile("^Backpropagating on table ([0-9]+)$")
+	backpropTableAltRegex    = regexp.MustCompile("^\\[P2\\] Table ([0-9]+) rewrite took .* sec(, dropped .* entries \\(.*\\))?$")
+	compressTableRegex       = regexp.MustCompile("^Compressing tables ([0-9]+) and ([0-9])+$")
+	compressTableAltRegex    = regexp.MustCompile("^\\[P3-2\\] Table ([0-9]+) took .* sec, wrote [0-9]+ left entries, [0-9]+ final$")
+	writeCheckpointTables    = regexp.MustCompile(".*Write Checkpoint tables.*$")
+	writeCheckpointTablesAlt = regexp.MustCompile("^Total plot creation time was .* sec$")
 
 	computingTableProgress = map[uint]uint{
 		1: 1,
@@ -39,6 +43,7 @@ var (
 		4: 85,
 		5: 92,
 		6: 98,
+		7: 99,
 	}
 )
 
@@ -75,7 +80,11 @@ func GetPlotProgress(logReader io.Reader) (progress uint, completed bool) {
 
 func getLineProgress(line string) (uint, bool, error) {
 	computingTableMatches := computingTableRegex.FindStringSubmatch(line)
-	if len(computingTableMatches) == 2 {
+	if len(computingTableMatches) == 0 {
+		computingTableMatches = computingTableAltRegex.FindStringSubmatch(line)
+	}
+
+	if len(computingTableMatches) >= 2 {
 		progressMeter, err := strconv.ParseUint(computingTableMatches[1], 10, 32)
 		if err != nil {
 			return 0, false, fmt.Errorf("getLineProgress(): %s", err)
@@ -86,7 +95,11 @@ func getLineProgress(line string) (uint, bool, error) {
 	}
 
 	backpropTableMatches := backpropTableRegex.FindStringSubmatch(line)
-	if len(backpropTableMatches) == 2 {
+	if len(backpropTableMatches) == 0 {
+		backpropTableMatches = backpropTableAltRegex.FindStringSubmatch(line)
+	}
+
+	if len(backpropTableMatches) >= 2 {
 		progressMeter, err := strconv.ParseUint(backpropTableMatches[1], 10, 32)
 		if err != nil {
 			return 0, false, fmt.Errorf("getLineProgress(): %s", err)
@@ -97,7 +110,11 @@ func getLineProgress(line string) (uint, bool, error) {
 	}
 
 	compressTableMatches := compressTableRegex.FindStringSubmatch(line)
-	if len(compressTableMatches) == 3 {
+	if len(compressTableMatches) == 0 {
+		compressTableMatches = compressTableAltRegex.FindStringSubmatch(line)
+	}
+
+	if len(compressTableMatches) >= 2 {
 		progressMeter, err := strconv.ParseUint(compressTableMatches[1], 10, 32)
 		if err != nil {
 			return 0, false, fmt.Errorf("getLineProgress(): %s", err)
@@ -107,7 +124,7 @@ func getLineProgress(line string) (uint, bool, error) {
 		return compressTableProgress[uint(progressMeter)], false, nil
 	}
 
-	if writeCheckpointTables.MatchString(line) {
+	if writeCheckpointTables.MatchString(line) || writeCheckpointTablesAlt.MatchString(line) {
 		return 100, true, nil
 	}
 
